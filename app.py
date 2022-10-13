@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import altair as alt
 
-st.set_page_config(layout="wide")
+#st.set_page_config(layout="wide")
 
 st.markdown("Developed by **Dimas Adi Hartomo**")
 st.title("Chocolate Consumption and Happiness throughout the World")
@@ -28,12 +28,13 @@ line_chart = alt.Chart(source_choco).mark_line(interpolate='basis').encode(
     color='Country:N'
 ).properties(
     title='Chocolate Consumption Countries Around the World in 2014-2021',
-    width=1500, height=800
 )
 
-st.altair_chart(line_chart, use_container_width=False)
+st.altair_chart(line_chart, use_container_width=True)
 
-st.text('This data indicates that chocolate consumption tends to remain flat across countries every year')
+st.caption('This data indicates that chocolate consumption tends to remain flat across countries every year')
+
+st.markdown("---")
 
 df_chocolateV3 = df_chocolate.drop(['No'], axis=1)
 source_chocobar = df_chocolateV3.groupby('Continent')[[2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021]].sum().reset_index().melt(id_vars=["Continent"], 
@@ -51,24 +52,30 @@ error_bars = alt.Chart().mark_errorbar(extent='ci').encode(
     y='Sum Value:Q'
 )
 
-bar_plot = alt.layer(bars, error_bars, data=source_chocobar).facet(column='Continent:N')
+bar_plot = alt.layer(bars, error_bars, data=source_chocobar, width=100).facet(column='Continent:N')
 
-st.altair_chart(bar_plot, use_container_width=False)
+st.altair_chart(bar_plot, use_container_width=True)
 
-st.text('In the world, Europe consumes more chocolate than any other region')
+st.caption('In the world, Europe consumes more chocolate than any other region')
+
+st.markdown("---")
 
 df_hiV1 = df_hi.drop(['rank', 'happiness2020', 'scoreDifference'], axis=1)
 df_chocolateV4 = df_chocolate.drop(['No', 'Continent', 2014, 2015, 2016, 2017, 2018, 2019, 2020], axis=1)
-st.dataframe(df_hiV1)
-st.dataframe(df_chocolateV4)
-df_merged = pd.merge(df_chocolateV4, df_hiV1, on='Country')
-st.dataframe(df_merged)
-st.text(df_merged.dtypes)
-'''scatter_plot = alt.Chart(df_merged).mark_circle().encode(
-    alt.X(2021, scale=alt.Scale(zero=False)),
-    alt.Y('happiness2021', scale=alt.Scale(zero=False, padding=1)),
-    color='Country',
-    size='happiness2021'
-)
 
-st.altair_chart(scatter_plot, use_container_width=False)'''
+df_merged = pd.merge(df_hiV1, df_chocolateV4, on='Country')
+df_merged = df_merged.rename({2021: 'consumption'}, axis=1)
+#st.dataframe(df_merged)
+
+column_1 = df_merged["consumption"]
+column_2 = df_merged["happiness2021"]
+correlation = column_1. corr(column_2) 
+#st.text(correlation)
+
+fig = alt.Chart(df_merged).mark_point().encode(x='happiness2021',y='consumption',color='Country', tooltip=['Country', 'happiness2021', 'consumption'])
+
+final_plot = fig + fig.transform_regression('happiness2021', 'consumption').mark_line() + fig.interactive()
+
+st.altair_chart(final_plot, use_container_width=True)
+
+st.markdown("---")
