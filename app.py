@@ -13,6 +13,7 @@ st.caption('According to the [portal news](https://www.liputan6.com/health/read/
 st.caption("Are there any data to support this claim? Let's find out...")
 
 df_chocolate = pd.read_excel("https://docs.google.com/spreadsheets/d/e/2PACX-1vQEaB5kqREDO9ftItk0Oe_cMV3EttH_HryjtrzwyYu8ei3R_U1vU04iJuV31Z0Hrw/pub?output=xlsx")
+df_hi = pd.read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vTiNVCW218YXeJLpuKNjKzS4rObMCufRgLf27GlavQBHTR4WdErqp0sIsBr7I8jGQmPwaqrIUCUqWql/pub?gid=1456601958&single=true&output=csv")
 df_chocolateV1 = df_chocolate.drop(['No', 'Continent'], axis=1)
 
 df_chocolateV2 = df_chocolateV1.drop(['Country'], axis=1)
@@ -22,15 +23,17 @@ source_choco = df_chocolateV1.reset_index().melt(id_vars=["Country"],
         value_name="Value")
 
 line_chart = alt.Chart(source_choco).mark_line(interpolate='basis').encode(
-    alt.X('Year', title='Year', scale=alt.Scale(domain=[2014, 2021])),
-    alt.Y('Value', title='Consumption of Chocolate per Kilograms', scale=alt.Scale(domain=[0, 15])),
+    alt.X('Year', title='Year', scale=alt.Scale(domain=[2014, 2021]), axis=alt.Axis(tickCount=5)),
+    alt.Y('Value', title='Consumption of Chocolate per Kilogram', scale=alt.Scale(domain=[0, 15])),
     color='Country:N'
 ).properties(
-    title='Chocolate Consumption COuntries Around the World in 2014-2021',
+    title='Chocolate Consumption Countries Around the World in 2014-2021',
     width=1500, height=800
 )
 
 st.altair_chart(line_chart, use_container_width=False)
+
+st.text('This data indicates that chocolate consumption tends to remain flat across countries every year')
 
 df_chocolateV3 = df_chocolate.drop(['No'], axis=1)
 source_chocobar = df_chocolateV3.groupby('Continent')[[2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021]].sum().reset_index().melt(id_vars=["Continent"], 
@@ -51,3 +54,21 @@ error_bars = alt.Chart().mark_errorbar(extent='ci').encode(
 bar_plot = alt.layer(bars, error_bars, data=source_chocobar).facet(column='Continent:N')
 
 st.altair_chart(bar_plot, use_container_width=False)
+
+st.text('In the world, Europe consumes more chocolate than any other region')
+
+df_hiV1 = df_hi.drop(['rank', 'happiness2020', 'scoreDifference'], axis=1)
+df_chocolateV4 = df_chocolate.drop(['No', 'Continent', 2014, 2015, 2016, 2017, 2018, 2019, 2020], axis=1)
+st.dataframe(df_hiV1)
+st.dataframe(df_chocolateV4)
+df_merged = pd.merge(df_chocolateV4, df_hiV1, on='Country')
+st.dataframe(df_merged)
+st.text(df_merged.dtypes)
+'''scatter_plot = alt.Chart(df_merged).mark_circle().encode(
+    alt.X(2021, scale=alt.Scale(zero=False)),
+    alt.Y('happiness2021', scale=alt.Scale(zero=False, padding=1)),
+    color='Country',
+    size='happiness2021'
+)
+
+st.altair_chart(scatter_plot, use_container_width=False)'''
